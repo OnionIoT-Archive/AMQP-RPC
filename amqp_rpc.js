@@ -3,6 +3,8 @@
 var uuid = require('node-uuid');
 var amqp = require('amqplib');
 
+var mqServerUrl = 'amqp://onionCore:p@zh.onion.io';
+
 var log = function(msg){
     process.stdout.write("onion::amqp_rpc: ");
     console.log (msg);
@@ -16,7 +18,7 @@ exports.call = function (method, params, callback){
         params: params
     }
 
-    var open = amqp.connect('amqp://onionCore:p@zh.onion.io');
+    var open = amqp.connect(mqServerUrl);
     open.then(function(conn) {
         return conn.createChannel().then(function(ch) {
             var options = {durable: false, noAck: true, autoDelete: true};
@@ -33,7 +35,7 @@ exports.call = function (method, params, callback){
 }
 
 exports.register = function (method, callback){
-    var open = amqp.connect('amqp://onionCore:p@localhost');
+    var open = amqp.connect(mqServerUrl);
     open.then(function(conn) {
         return conn.createChannel().then(function(ch) {
             var options = {durable: false, noAck: true, autoDelete: true};

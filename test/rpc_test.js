@@ -1,4 +1,4 @@
-var rpc = require('../system/js/amqp_rpc');
+var rpc = require('../amqp_rpc');
 
 var log = function(msg){
     process.stdout.write("test::amqp_rpc.js: ");
@@ -6,9 +6,9 @@ var log = function(msg){
 }
 
 
-//rpc.register('ADD', function(params){
-//    return params.a + params.b
-//});
+rpc.register('ADD', function(params){
+    return params.a + params.b
+});
 
 rpc.call('ADD',{a:1,b:2}, function(result){
     log('1+2='+result);
