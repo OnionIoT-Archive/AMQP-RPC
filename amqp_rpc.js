@@ -3,7 +3,7 @@
 var uuid = require('node-uuid');
 var amqp = require('amqplib');
 
-var mqServerUrl = 'amqp://onionCore:p@zh.onion.io';
+var mqServerUrl = 'amqp://onionCore:p@test.onion.io';
 
 var log = function(msg){
     process.stdout.write("onion::amqp_rpc: ");
