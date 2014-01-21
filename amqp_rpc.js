@@ -43,8 +43,9 @@ exports.register = function (method, callback){
             ch.consume(method, function(msg) {
                 if (msg !== null) {
                     var data = JSON.parse(msg.content.toString());
-                    var result = callback(data.params);
-                    ch.sendToQueue(data.replyTo, new Buffer(JSON.stringify(result)));
+                    callback(data.params, function(result){
+                        ch.sendToQueue(data.replyTo, new Buffer(JSON.stringify(result)));
+                    });
                 }
             });
         });
