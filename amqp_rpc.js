@@ -25,6 +25,7 @@ exports.call = function (method, params, callback){
             ch.assertQueue(replyQueue, options);
             ch.consume(replyQueue, function(msg) {
                 if (msg !== null) {
+                    ch.ack(msg);
                     conn.close();
                     callback(msg.content.toString());
                 }
@@ -34,14 +35,18 @@ exports.call = function (method, params, callback){
     });
 }
 
+var connectionTable = {};
+
 exports.register = function (method, callback){
     var open = amqp.connect(mqServerUrl);
     open.then(function(conn) {
+        connectionTable[method] = conn;
         return conn.createChannel().then(function(ch) {
-            var options = {durable: false, noAck: true, autoDelete: true};
+            var options = {durable: false, noAck: false, autoDelete: true};
             ch.assertQueue(method, options);
             ch.consume(method, function(msg) {
                 if (msg !== null) {
+                    ch.ack(msg);
                     var data = JSON.parse(msg.content.toString());
                     callback(data.params, function(result){
                         ch.sendToQueue(data.replyTo, new Buffer(JSON.stringify(result)));
@@ -50,4 +55,8 @@ exports.register = function (method, callback){
             });
         });
     });
+}
+
+exports.unregister = function (method){
+    connectionTable[method].close();
 }

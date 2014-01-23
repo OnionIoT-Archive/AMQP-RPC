@@ -5,15 +5,24 @@ var log = function(msg){
     console.log (msg);
 }
 
+var test = function (a, b){
+    log((a===b)?'PASS':'FAIL');
+}
 
-rpc.register('ADD', function(params){
-    return params.a + params.b
+rpc.register('ADD', function(params, callback){
+    callback( params.a + params.b);
 });
 
-rpc.call('ADD',{a:1,b:2}, function(result){
-    log('1+2='+result);
-});
+for (var i=0;i<100;i++){
+    rpc.call('ADD',{a:i,b:1}, function(result){
+        log(result);
+        if (result == 100){
+            log ('All Done');
+            rpc.unregister('ADD');
+        }
+    });
+}
 
-rpc.call('ADD',{a:9,b:1}, function(result){
-    log('9+1='+result);
-});
+
+
+
