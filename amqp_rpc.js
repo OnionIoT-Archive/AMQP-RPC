@@ -21,13 +21,19 @@ exports.call = function (method, params, callback){
     var open = amqp.connect(mqServerUrl);
     open.then(function(conn) {
         return conn.createChannel().then(function(ch) {
-            var options = {durable: false, noAck: true, autoDelete: true};
+            var timeOutId = setTimeout(function(){
+                conn.close();
+                log('time out');
+            },10000);
+
+            var options = {durable: false, noAck: false, autoDelete: true};
             ch.assertQueue(replyQueue, options);
             ch.consume(replyQueue, function(msg) {
                 if (msg !== null) {
                     ch.ack(msg);
                     conn.close();
-                    callback(msg.content.toString());
+                    clearTimeout(timeOutId);
+                    callback(JSON.parse(msg.content.toString()));
                 }
             });
             ch.sendToQueue(method, new Buffer(JSON.stringify(payload)));
@@ -59,4 +65,5 @@ exports.register = function (method, callback){
 
 exports.unregister = function (method){
     connectionTable[method].close();
+    delete connectionTable[method];
 }

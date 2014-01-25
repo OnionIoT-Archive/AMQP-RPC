@@ -13,6 +13,7 @@ rpc.register('ADD', function(params, callback){
     callback( params.a + params.b);
 });
 
+log('load test');
 for (var i=0;i<100;i++){
     rpc.call('ADD',{a:i,b:1}, function(result){
         log(result);
@@ -23,6 +24,12 @@ for (var i=0;i<100;i++){
     });
 }
 
+setTimeout(function(){
+    log('hang connection test:');
+    rpc.call('ADD1',{a:i,b:1}, function(result){
+        callback( params.a + params.b);
+    });
+},3000);
 
 
 
