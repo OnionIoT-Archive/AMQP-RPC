@@ -3,12 +3,22 @@
 var uuid = require('node-uuid');
 var amqp = require('amqplib');
 
-var mqServerUrl = 'amqp://onionCore:p@test.onion.io';
+
 
 var log = function(msg){
     process.stdout.write("onion::amqp_rpc: ");
     console.log (msg);
 }
+
+
+
+var mqServerUrl = 'amqp://onionCore:p@test.onion.io';
+var conn = null;
+var open = amqp.connect(mqServerUrl);
+open.then(function(connection) {
+    log('mq connection opened');
+    conn = connection;
+});
 
 exports.call = function (method, params, callback){
     var replyQueue = 'rpc-'+uuid.v4();
@@ -18,11 +28,10 @@ exports.call = function (method, params, callback){
         params: params
     }
 
-    var open = amqp.connect(mqServerUrl);
     open.then(function(conn) {
-        return conn.createChannel().then(function(ch) {
+        conn.createChannel().then(function(ch) {
             var timeOutId = setTimeout(function(){
-                conn.close();
+                ch.close();
                 log('time out');
             },10000);
 
@@ -31,7 +40,7 @@ exports.call = function (method, params, callback){
             ch.consume(replyQueue, function(msg) {
                 if (msg !== null) {
                     ch.ack(msg);
-                    conn.close();
+                    ch.close();
                     clearTimeout(timeOutId);
                     callback(JSON.parse(msg.content.toString()));
                 }
@@ -44,12 +53,11 @@ exports.call = function (method, params, callback){
 var connectionTable = {};
 
 exports.register = function (method, callback){
-    var open = amqp.connect(mqServerUrl);
     open.then(function(conn) {
-        connectionTable[method] = conn;
         return conn.createChannel().then(function(ch) {
             var options = {durable: false, noAck: false, autoDelete: true};
             ch.assertQueue(method, options);
+            connectionTable[method] = ch;
             ch.consume(method, function(msg) {
                 if (msg !== null) {
                     ch.ack(msg);
@@ -65,5 +73,5 @@ exports.register = function (method, callback){
 
 exports.unregister = function (method){
     connectionTable[method].close();
-    delete connectionTable[method];
+    connectionTable[method] = null;
 }
