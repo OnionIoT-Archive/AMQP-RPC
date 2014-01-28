@@ -16,9 +16,14 @@ rpc.start()
 
 print '##### Load Test #####'
 
-for i in range(100):
+for i in range(10):
     result = rpc.call('PY_TEST',{'a': i, 'b':i})
     print '%s + %s = %s'%(i,i,result)
+
+print '##### DB Test #####'
+
+print "DB_GET_USER:"
+print rpc.call('DB_GET_USER', {})
 
 
 rpc.stop()
