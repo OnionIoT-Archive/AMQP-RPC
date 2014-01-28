@@ -3,6 +3,7 @@ import json
 import uuid
 import shortuuid
 from threading import Thread
+import time
 
 ### Config ###
 _mqUrl = 'amqp://onionCore:p@test.onion.io:5672/%2F'
@@ -54,7 +55,12 @@ def call(method, params):
     payload = json.dumps(payload)
     channel.basic_publish(exchange=_exchange, routing_key=method, body=payload)
     channel.basic_consume(onReturn, queue=replyQueue, no_ack=True)
+    timeout = 3
+    now = time.time()
     while _callResult[replyQueue] == None:
+        if int(time.time()-now) > timeout:
+            print 'Timeout'
+            break
         _connection.process_data_events()
     result = _callResult[replyQueue]
     del _callResult[replyQueue]

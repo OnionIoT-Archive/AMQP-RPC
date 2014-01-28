@@ -25,6 +25,9 @@ print '##### DB Test #####'
 print "DB_GET_USER:"
 print rpc.call('DB_GET_USER', {})
 
+print '##### Hang Test #####'
+print rpc.call('RANDOM_FUNCTION', {})
+
 
 rpc.stop()
 #time.sleep(1)
