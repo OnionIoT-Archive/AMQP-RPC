@@ -26,8 +26,9 @@ def onCall(ch, meta, props, body):
     method = meta.routing_key
     body = json.loads(body)
     result = _callbacks[method](body['params'])
-    result = json.dumps(result)
-    ch.basic_publish(exchange=_exchange, routing_key=body['replyTo'], body=result)
+    if body['replyTo'] != None:
+        result = json.dumps(result)
+        ch.basic_publish(exchange=_exchange, routing_key=body['replyTo'], body=result)
 
 def register(fn):
     method = fn.__name__
@@ -44,27 +45,34 @@ def onReturn(ch, meta, props, body):
     _callResult[replyQueue] = body
 
 
-def call(method, params):
+def call(method, params, noReturn = False):
     channel = _connection.channel()
-    replyQueue = channel.queue_declare(auto_delete=True).method.queue
-    _callResult[replyQueue] = None
+    if noReturn:
+        replyQueue = None
+    else:
+        replyQueue = channel.queue_declare(auto_delete=True).method.queue
+        _callResult[replyQueue] = None
     payload = {
         'replyTo': replyQueue,
         'params': params
     }
     payload = json.dumps(payload)
     channel.basic_publish(exchange=_exchange, routing_key=method, body=payload)
-    channel.basic_consume(onReturn, queue=replyQueue, no_ack=True)
-    timeout = 3
-    now = time.time()
-    while _callResult[replyQueue] == None:
-        if int(time.time()-now) > timeout:
-            print 'Timeout'
-            break
-        _connection.process_data_events()
-    result = _callResult[replyQueue]
-    del _callResult[replyQueue]
-    return result
+
+    if noReturn:
+        return
+    else:
+        channel.basic_consume(onReturn, queue=replyQueue, no_ack=True)
+        timeout = 3
+        now = time.time()
+        while _callResult[replyQueue] == None:
+            if int(time.time()-now) > timeout:
+                print 'Timeout'
+                break
+            _connection.process_data_events()
+        result = _callResult[replyQueue]
+        del _callResult[replyQueue]
+        return result
 
 
 def _startConsume():
@@ -74,6 +82,7 @@ def _startConsume():
 
 def start():
     thread = Thread(target = _startConsume)
+    thread.start()
 
 def stop():
     _stoped = True
