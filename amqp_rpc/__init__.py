@@ -46,7 +46,8 @@ def onReturn(ch, meta, props, body):
 
 
 def call(method, params, noReturn = False):
-    channel = _connection.channel()
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
     if noReturn:
         replyQueue = None
     else:
@@ -68,8 +69,9 @@ def call(method, params, noReturn = False):
         while _callResult[replyQueue] == None:
             if int(time.time()-now) > timeout:
                 print 'Timeout'
-                break
-            _connection.process_data_events()
+                return
+            connection.process_data_events()
+        connection.close()
         result = _callResult[replyQueue]
         del _callResult[replyQueue]
         return result
@@ -81,8 +83,9 @@ def _startConsume():
     _connection.close()
 
 def start():
-    thread = Thread(target = _startConsume)
-    thread.start()
+    _startConsume()
+    #thread = Thread(target = _startConsume)
+    #thread.start()
 
 def stop():
     _stoped = True
