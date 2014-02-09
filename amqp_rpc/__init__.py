@@ -52,7 +52,7 @@ def call(method, params, noReturn = False):
         replyQueue = None
     else:
         replyQueue = channel.queue_declare(auto_delete=True).method.queue
-        _callResult[replyQueue] = None
+        _callResult[replyQueue] = 'PENDING'
     payload = {
         'replyTo': replyQueue,
         'params': params
@@ -66,7 +66,7 @@ def call(method, params, noReturn = False):
         channel.basic_consume(onReturn, queue=replyQueue, no_ack=True)
         timeout = 3
         now = time.time()
-        while _callResult[replyQueue] == None:
+        while _callResult[replyQueue] == 'PENDING':
             if int(time.time()-now) > timeout:
                 print 'Timeout'
                 return
