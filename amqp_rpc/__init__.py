@@ -82,10 +82,12 @@ def _startConsume():
         _connection.process_data_events()
     _connection.close()
 
-def start():
-    _startConsume()
-    #thread = Thread(target = _startConsume)
-    #thread.start()
+def start(useThread=False):
+    if useThread:
+        thread = Thread(target = _startConsume)
+        thread.start()
+    else:
+        _startConsume()
 
 def stop():
     _stoped = True
