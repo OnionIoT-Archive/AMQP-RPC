@@ -2,7 +2,7 @@ import pika
 import json
 import uuid
 import shortuuid
-from threading import Thread
+import threading 
 import time
 
 ### Config ###
@@ -11,7 +11,8 @@ _exchange = ''
 
 ### Initialization ###
 parameters = pika.URLParameters(_mqUrl)
-_connection = pika.BlockingConnection(parameters)
+_connection = None
+#_connection = pika.BlockingConnection(parameters)
 #_channel = _connection.channel()
 #_queue = shortuuid.uuid(name="onion.io")
 #_queue = _channel.queue_declare(auto_delete=True).method.queue
@@ -30,13 +31,22 @@ def onCall(ch, meta, props, body):
         result = json.dumps(result)
         ch.basic_publish(exchange=_exchange, routing_key=body['replyTo'], body=result)
 
+def _listenerThread(method):
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    queue = channel.queue_declare(queue=method, auto_delete=True).method.queue
+    channel.basic_consume(onCall, queue=queue, no_ack=True)
+    channel.start_consuming()
+
 def register(fn):
     method = fn.__name__
     if fn!=None:
         _callbacks[method] = fn
-    channel = _connection.channel()
-    queue = channel.queue_declare(queue=method, auto_delete=True).method.queue
-    channel.basic_consume(onCall, queue=queue, no_ack=True)
+    t = threading.Thread(target=_listenerThread, args=(method,))
+    t.daemon = True
+    t.start()
+    print "listener %s started"%method
+
 
 def onReturn(ch, meta, props, body):
     ch.close()
@@ -46,8 +56,8 @@ def onReturn(ch, meta, props, body):
 
 
 def call(method, params, noReturn = False):
-    #connection = pika.BlockingConnection(parameters)
-    channel = _connection.channel()
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
     if noReturn:
         replyQueue = None
     else:
@@ -70,8 +80,8 @@ def call(method, params, noReturn = False):
             if int(time.time()-now) > timeout:
                 print 'Timeout'
                 return
-            _connection.process_data_events()
-        #connection.close()
+            connection.process_data_events()
+        connection.close()
         result = _callResult[replyQueue]
         del _callResult[replyQueue]
         return result
@@ -82,12 +92,10 @@ def _startConsume():
         _connection.process_data_events()
     _connection.close()
 
-def start(useThread=False):
-    if useThread:
-        thread = Thread(target = _startConsume)
-        thread.start()
-    else:
-        _startConsume()
+def loop():
+    while True:
+        time.sleep(1)
+
 
 def stop():
     _stoped = True

@@ -11,9 +11,6 @@ def PY_TEST(params):
 def PY_TEST2(params):
     return 'PY_TEST2: %s'%params
 
-
-rpc.start()
-
 print '##### Load Test #####'
 
 for i in range(10):
@@ -27,8 +24,4 @@ print rpc.call('DB_GET_USER', {})
 
 print '##### Hang Test #####'
 print rpc.call('RANDOM_FUNCTION', {})
-
-
-rpc.stop()
-#time.sleep(1)
 
