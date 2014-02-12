@@ -21,7 +21,14 @@ open.then(function(connection) {
 });
 
 exports.call = function (method, params, callback){
-    var replyQueue = 'rpc-'+uuid.v4();
+
+
+    var replyQueue = null;
+    if (typeof callback !== 'undefined') {
+        // No return 
+        var replyQueue = 'rpc-'+uuid.v4();
+    }
+
 
     var payload = {
         replyTo: replyQueue,
@@ -30,21 +37,24 @@ exports.call = function (method, params, callback){
 
     open.then(function(conn) {
         conn.createChannel().then(function(ch) {
-            var timeOutId = setTimeout(function(){
-                ch.close();
-                log('time out');
-            },5000);
-
-            var options = {durable: false, noAck: false, autoDelete: true};
-            ch.assertQueue(replyQueue, options);
-            ch.consume(replyQueue, function(msg) {
-                if (msg !== null) {
-                    ch.ack(msg);
+            if (replyQueue !== null){
+                // expecting reply
+                var timeOutId = setTimeout(function(){
                     ch.close();
-                    clearTimeout(timeOutId);
-                    callback(JSON.parse(msg.content.toString()));
-                }
-            });
+                    log('time out');
+                },5000);
+
+                var options = {durable: false, noAck: false, autoDelete: true};
+                ch.assertQueue(replyQueue, options);
+                ch.consume(replyQueue, function(msg) {
+                    if (msg !== null) {
+                        ch.ack(msg);
+                        ch.close();
+                        clearTimeout(timeOutId);
+                        callback(JSON.parse(msg.content.toString()));
+                    }
+                });
+            }
             ch.sendToQueue(method, new Buffer(JSON.stringify(payload)));
         });
     });
@@ -62,9 +72,14 @@ exports.register = function (method, callback){
                 if (msg !== null) {
                     ch.ack(msg);
                     var data = JSON.parse(msg.content.toString());
-                    callback(data.params, function(result){
-                        ch.sendToQueue(data.replyTo, new Buffer(JSON.stringify(result)));
-                    });
+                    if (data.replyTo !== null) {
+                        callback(data.params, function(result){
+                            ch.sendToQueue(data.replyTo, new Buffer(JSON.stringify(result)));
+                        });
+                    }else{
+                        callback(data.params);
+                        log ('no return');
+                    }
                 }
             });
         });
