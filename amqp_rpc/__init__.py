@@ -86,12 +86,6 @@ def call(method, params, noReturn = False):
         del _callResult[replyQueue]
         return result
 
-
-def _startConsume():
-    while not _stoped:
-        _connection.process_data_events()
-    _connection.close()
-
 def loop():
     while True:
         time.sleep(1)

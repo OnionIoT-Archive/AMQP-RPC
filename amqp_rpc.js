@@ -33,7 +33,7 @@ exports.call = function (method, params, callback){
             var timeOutId = setTimeout(function(){
                 ch.close();
                 log('time out');
-            },10000);
+            },5000);
 
             var options = {durable: false, noAck: false, autoDelete: true};
             ch.assertQueue(replyQueue, options);
