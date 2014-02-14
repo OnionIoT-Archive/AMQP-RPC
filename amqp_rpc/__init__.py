@@ -31,9 +31,10 @@ def onCall(ch, meta, props, body):
         result = json.dumps(result)
         ch.basic_publish(exchange=_exchange, routing_key=body['replyTo'], body=result)
 
+_connection = pika.BlockingConnection(parameters)
 def _listenerThread(method):
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
+    #connection = pika.BlockingConnection(parameters)
+    channel = _connection.channel()
     queue = channel.queue_declare(queue=method, auto_delete=True).method.queue
     channel.basic_consume(onCall, queue=queue, no_ack=True)
     channel.start_consuming()
