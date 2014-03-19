@@ -6,11 +6,15 @@ import threading
 import time
 
 ### Config ###
-_mqUrl = 'amqp://onionCore:p@test.onion.io:5672/%2F'
+# load configuration file
+with open("/etc/onionConfig.json") as f:
+    config = json.load(f)["AMQP_RPC"]
+
 _exchange = ''
 
 ### Initialization ###
-parameters = pika.URLParameters(_mqUrl)
+credentials = pika.PlainCredentials( config['MQ_USER'], config['MQ_PASS'])
+parameters = pika.ConnectionParameters(config['MQ_DOMAIN'], config['MQ_PORT'], config['MQ_VPATH'], credentials)
 _connection = None
 #_connection = pika.BlockingConnection(parameters)
 #_channel = _connection.channel()
