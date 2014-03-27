@@ -2,7 +2,8 @@
 
 var uuid = require('node-uuid');
 var amqp = require('amqplib');
-
+var config = require('../../config');
+var config = config.init();
 
 
 var log = function(msg){
@@ -12,7 +13,7 @@ var log = function(msg){
 
 
 
-var mqServerUrl = 'amqp://onionCore:p@test.onion.io';
+var mqServerUrl = config.mqServerUrl;
 var conn = null;
 var open = amqp.connect(mqServerUrl);
 open.then(function(connection) {
