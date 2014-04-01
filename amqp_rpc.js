@@ -52,7 +52,12 @@ exports.call = function (method, params, callback){
                         ch.ack(msg);
                         ch.close();
                         clearTimeout(timeOutId);
-                        callback(JSON.parse(msg.content.toString()));
+                        try{
+                        	callback(JSON.parse(msg.content.toString()));
+                        }catch(err){
+                        	console.log(err);
+                        }
+                        
                     }
                 });
             }
