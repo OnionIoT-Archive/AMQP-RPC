@@ -55,7 +55,8 @@ exports.call = function (method, params, callback){
                         try{
                         	callback(JSON.parse(msg.content.toString()));
                         }catch(err){
-                        	console.log(err);
+                        	console.log(err.stack);
+                        	console.log(err.lineNumber);
                         }
                         
                     }
