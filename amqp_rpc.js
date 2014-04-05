@@ -2,9 +2,12 @@
 
 var uuid = require('node-uuid');
 var amqp = require('amqplib');
-var config = require('../../config');
-var config = config.init();
-
+var config = {};
+try{
+    config = require('/etc/onionConfig.json').AMQP_RPC;
+}catch(err){
+    throw "Config file not found. Clone the server-config project form git and follow README";
+}
 
 var log = function(msg){
     process.stdout.write("onion::amqp_rpc: ");
@@ -13,7 +16,7 @@ var log = function(msg){
 
 
 
-var mqServerUrl = config.mqServerUrl;
+var mqServerUrl = config.SERVER_FULL_URL;
 var conn = null;
 var open = amqp.connect(mqServerUrl);
 open.then(function(connection) {
