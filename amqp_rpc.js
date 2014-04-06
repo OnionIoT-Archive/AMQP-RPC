@@ -2,6 +2,7 @@
 
 var uuid = require('node-uuid');
 var amqp = require('amqplib');
+var util = require('util');
 var config = {};
 try{
     config = require('/etc/onionConfig.json').AMQP_RPC;
@@ -16,7 +17,12 @@ var log = function(msg){
 
 
 
-var mqServerUrl = config.SERVER_FULL_URL;
+var mqServerUrl = util.format('amqp://%s:%s@%s:%s/%s', 
+        config.MQ_USER,
+        config.MQ_PASS,
+        config.MQ_DOMAIN,
+        config.MQ_PORT,
+        config.MQ_VPATH);
 var conn = null;
 var open = amqp.connect(mqServerUrl);
 open.then(function(connection) {
