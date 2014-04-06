@@ -106,3 +106,17 @@ exports.unregister = function (method){
     connectionTable[method].close();
     connectionTable[method] = null;
 }
+
+
+/*******  Logging  *******/
+
+var _logModule = "N/A"
+exports.setLogModule = function (module) {
+    _logModule = module
+}
+
+exports.log = function (msg, level){
+    if(typeof(level)==='undefined') level = 'DEBUG';
+    module = _logModule;
+    exports.call('UTIL_LOG',{'module': module, 'level': level,  'msg': msg});
+}

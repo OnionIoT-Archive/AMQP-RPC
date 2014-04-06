@@ -100,3 +100,15 @@ def stop():
     _stoped = True
 
 
+######## Logging ############
+_logModule = "N/A"
+
+def setLogModule(module):
+    global _logModule
+    _logModule = module
+
+def log(msg, level='DEBUG'):
+    module = _logModule
+    call('UTIL_LOG',{'module': module, 'level': level,  'msg': msg}, noReturn=True)
+
+

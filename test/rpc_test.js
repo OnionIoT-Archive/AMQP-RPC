@@ -44,6 +44,10 @@ rpc.call('NO_RETURN_TEST',{a:'4'});
 rpc.call('NO_RETURN_TEST',{a:'5'});
         
 
+log('logging test');
+rpc.setLogModule('JS RPC Test');
+rpc.log("js rpc test");
+
 
 setTimeout(function(){
     log('hang connection test:');
